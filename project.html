@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Weekly Class Schedule </title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #0b1220;
+            --accent: #06b6d4;
+            --muted: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --card-radius: 14px;
+            --gap: 12px;
+            --max-w: 1100px;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, #071024 0%, #071b2a 100%);
+            color: #e6eef6;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 28px
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: var(--max-w)
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px
+        }
+
+        .logo {
+            background: var(--glass);
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 16px
+        }
+
+        .controls {
+            margin-left: auto;
+            display: flex;
+            gap: 8px
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 8px 12px;
+            border-radius: 10px;
+            color: inherit;
+            cursor: pointer
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            padding: 16px;
+            border-radius: var(--card-radius);
+            box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+        }
+
+        .top-row {
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .selection {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        select,
+        input[type="time"] {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 8px;
+            border-radius: 8px;
+            color: inherit
+        }
+
+        /* Grid */
+        .grid-wrap {
+            margin-top: 14px;
+            overflow: auto
+        }
+
+        table.schedule {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px
+        }
+
+        table.schedule thead th {
+            position: sticky;
+            top: 0;
+            background: rgba(3, 7, 18, 0.9);
+            backdrop-filter: blur(4px);
+            z-index: 2;
+            padding: 10px 12px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        table.schedule tbody td {
+            border-top: 1px dashed rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            height: 68px;
+            vertical-align: top
+        }
+
+        td.time {
+            width: 110px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.01), transparent);
+            font-size: 13px;
+            color: var(--muted);
+            padding: 12px
+        }
+
+        .cell {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .entry {
+            background: linear-gradient(180deg, rgba(6, 182, 212, 0.14), rgba(6, 182, 212, 0.06));
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 13px
+        }
+
+        .entry small {
+            display: block;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 12px
+        }
+
+        .empty {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .hint {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.6);
+            visibility: hidden;
+            opacity: 0;
+            transition: all .18s
+        }
+
+        .modal.show {
+            visibility: visible;
+            opacity: 1
+        }
+
+        .modal .box {
+            background: var(--card);
+            padding: 16px;
+            border-radius: 12px;
+            width: 420px;
+            max-width: 92%
+        }
+
+        .modal label {
+            display: block;
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        .modal input[type=text],
+        .modal textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 6px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: transparent;
+            color: inherit
+        }
+
+        .modal .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end
+        }
+
+        /* resposive */
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .grid-wrap {
+                overflow-x: auto;
+                /* horizontal scroll */
+            }
+
+            table.schedule {
+                min-width: 600px;
+                /* smaller min-width for mobile */
+                font-size: 12px;
+            }
+
+            table.schedule thead th,
+            table.schedule tbody td {
+                padding: 6px 8px;
+            }
+
+            td.time {
+                width: 80px;
+                padding: 6px 8px;
+            }
+
+            .top-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .selection {
+                flex-wrap: wrap;
+            }
+
+            button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+        }
+
+
+        body.light-mode {
+            background: #f0f4f8;
+            color: #1e293b;
+        }
+
+        body.light-mode .card {
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e293b;
+        }
+
+        body.light-mode table.schedule thead th {
+            background: rgba(255, 255, 255, 0.95);
+            color: #64748b;
+        }
+
+        body.light-mode td.time {
+            background: rgba(255, 255, 255, 0.8);
+            color: #64748b;
+        }
+
+        body.light-mode .entry {
+            background: rgba(6, 182, 212, 0.2);
+            color: #1e293b;
+        }
+
+        body.light-mode .empty {
+            color: #64748b;
+        }
+
+
+        td .cell {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        td .cell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+        td .entry {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        td .entry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+
+        .modal.show .box {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal .box {
+            transform: translateY(-30px);
+            opacity: 0;
+            transition: all 0.25s ease;
+        }
+
+
+        button {
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--accent);
+            color: #0f172a;
+            border-color: var(--accent);
+        }
+
+
+        /* small */
+        @media (max-width:760px) {
+            table.schedule {
+                min-width: 700px
+            }
+
+            .controls {
+                display: none
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <div class="logo card">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-opacity="0.6"
+                        stroke-width="1.2"></rect>
+                    <path d="M7 13V18" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path>
+                </svg>
+                <div>
+                    <h1>Class Schedule</h1>
+                    <div style="font-size:12px;color:var(--muted)">Weekly editable timetable</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="themeToggle">Mood</button>
+                <button id="exportBtn">Export JSON</button>
+                <button id="importBtn">Import JSON</button>
+                <button id="clearBtn">Clear</button>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="top-row">
+                <div class="selection">
+                    <label style="font-size:13px;color:var(--muted)">Week start</label>
+                    <select id="weekStart">
+                        <option value="mon">Monday</option>
+                        <option value="sun">Sunday</option>
+
+                    </select>
+                </div>
+
+                <div class="selection">
+                    <label style="font-size:13px;color:var(--muted)">Start time</label>
+                    <input type="time" id="startTime" value="08:30">
+                </div>
+
+                <div class="selection">
+                    <label style="font-size:13px;color:var(--muted)">End time</label>
+                    <input type="time" id="endTime" value="16:30">
+                </div>
+
+                <div class="selection" style="margin-left:12px">
+                    <label style="font-size:13px;color:var(--muted)">Slot length</label>
+                    <select id="slotLen">
+                        <option value="1:45" selected>1 hour 25 mint</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="grid-wrap">
+                <table class="schedule" id="scheduleTable">
+                    <thead>
+                        <tr id="theadRow">
+                            <th></th>
+                            <!-- days injected -->
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyRows">
+                        <!-- rows injected -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="hint">Tip: Double-click any cell to add or edit a class (subject, teacher, time). Changes are
+                saved locally in your browser.</div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="box card">
+            <h3 id="modalTitle">Edit Class</h3>
+            <label>Subject</label>
+            <input id="subj" type="text" placeholder="e.g. Mathematics">
+            <label>Teacher</label>
+            <input id="teacher" type="text" placeholder="e.g. Mr. Ahmed">
+            <label>Note / Room</label>
+            <input id="note" type="text" placeholder="e.g. Lab 2">
+            <div class="actions">
+                <button id="deleteEntry">Delete</button>
+                <button id="saveEntry">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileIn" accept="application/json" style="display:none">
+
+    <script>
+        // helpers
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => document.querySelectorAll(s);
+
+        const weekNames = { mon: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], sun: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
+        const scheduleKey = 'my_weekly_schedule_v1';
+
+        let state = {
+            start: '08:30',
+            end: '16:30',
+            slot: 85,
+            week: 'mon',
+            data: {
+
+
+
+
+
+
+
+                "Mon_0830-0955": {
+                    "subject": "AICT Lab",
+                    "teacher": "Ahsan Maqsood",
+                    "note": "CLAB 9"
+                },
+                "Mon_0955-1120": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Mon_1120-1245": {
+                    "subject": "AICT Lab",
+                    "teacher": "Ahsan Maqsood",
+                    "note": "CLAB 8"
+                },
+                "Mon_1245-1340": {
+                    "subject": "Break",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Mon_1340-1505": {
+                    "subject": "Functional English",
+                    "teacher": "Sameen Fatima",
+                    "note": "D7"
+                },
+                "Mon_1505-1630": {
+                    "subject": "AICT",
+                    "teacher": "Asma Iqbal",
+                    "note": "C2.5"
+                },
+
+                "Tue_0830-0955": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Tue_0955-1120": {
+                    "subject": "PF",
+                    "teacher": "Fayez Afzaal",
+                    "note": "A1.1"
+                },
+                "Tue_1120-1245": {
+                    "subject": "AICT",
+                    "teacher": "Asma Iqbal",
+                    "note": "B13"
+                },
+                "Tue_1245-1340": {
+                    "subject": "Break",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Tue_1340-1505": {
+                    "subject": "Pre-Calculus",
+                    "teacher": "C2.3",
+                    "note": ""
+                },
+                "Tue_1505-1630": {
+                    "subject": "Psychology",
+                    "teacher": "Sana Farooq",
+                    "note": "W4"
+                },
+
+                "Wed_0830-0955": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Wed_0955-1120": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Wed_1120-1245": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Wed_1245-1340": {
+                    "subject": "Break",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Wed_1340-1505": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Wed_1505-1630": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                },
+
+                "Thu_0830-0955": {
+                    "subject": "FP Lab",
+                    "teacher": "Ayesha Perveen",
+                    "note": "CLab 1"
+                },
+                "Thu_0955-1120": {
+                    "subject": "Pre-Calculus",
+                    "teacher": "Misbah",
+                    "note": "C1.2"
+                },
+                "Thu_1120-1245": {
+                    "subject": "PF Lab",
+                    "teacher": "Ayesha Perveen",
+                    "note": "CLab 9"
+                },
+                "Thu_1245-1340": {
+                    "subject": "Break",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Thu_1340-1505": {
+                    "subject": "Civics",
+                    "teacher": "Khadim Hussain",
+                    "note": "C1.4"
+                },
+                "Thu_1505-1630": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                },
+
+                "Fri_0830-0955": {
+                    "subject": "English",
+                    "teacher": "Sameen Fatima",
+                    "note": "C2.2"
+                },
+                "Fri_0955-1120": {
+                    "subject": "Civics",
+                    "teacher": "Muzammil Hussain",
+                    "note": "C1"
+                },
+                "Fri_1120-1245": {
+                    "subject": "PF",
+                    "teacher": "Fayez Afzaal",
+                    "note": "W4"
+                },
+                "Fri_1245-1340": {
+                    "subject": "Break",
+                    "teacher": "",
+                    "note": ""
+                },
+                "Fri_1340-1505": {
+                    "subject": "Psychology",
+                    "teacher": "Sana Farooq",
+                    "note": "C1.1"
+                },
+                "Fri_1505-1630": {
+                    "subject": "Free",
+                    "teacher": "",
+                    "note": ""
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+            }
+
+        };
+
+
+        const loadState = () => {
+            try {
+                const raw = localStorage.getItem(scheduleKey);
+                if (raw) state = { ...state, ...JSON.parse(raw) };
+            } catch (e) { console.warn('load failed', e) }
+        }
+        const saveState = () => localStorage.setItem(scheduleKey, JSON.stringify(state));
+
+        function buildGrid() {
+            const days = weekNames[state.week];
+            const theadRow = $('#theadRow');
+            theadRow.innerHTML = '<th></th>' + days.map(d => `<th>${d}</th>`).join('');
+
+            const tbody = $('#tbodyRows');
+            tbody.innerHTML = '';
+
+            const [sh, sm] = state.start.split(':').map(Number);
+            const [eh, em] = state.end.split(':').map(Number);
+            let startMinutes = sh * 60 + sm;
+            let endMinutes = eh * 60 + em;
+            if (endMinutes <= startMinutes) endMinutes = startMinutes + 8 * 60;
+
+            // slot durations (example, adjust if needed)
+            const slotTimes = [85, 85, 85, 55, 85, 85]; // 4th is break
+            let t = startMinutes;
+
+            slotTimes.forEach((duration, idx) => {
+                const startH = Math.floor(t / 60);
+                const startM = t % 60;
+                const endT = t + duration;
+                const endH = Math.floor(endT / 60);
+                const endM = endT % 60;
+
+                const label = `${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')} – ${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+                const tr = document.createElement('tr');
+
+                if (idx === 3) { // break slot
+                    tr.innerHTML = `<td class="time">${label}</td>` + days.map(() => `<td><div class="cell"><div class="empty">Break</div></div></td>`).join('');
+                } else {
+                    tr.innerHTML = `<td class="time">${label}</td>` + days.map(d => {
+                        const normalize = (s) => s.replace(/\s+/g, '').replace(/–/g, '-').replace(/:/g, '');
+                        const key = `${d}_${normalize(label)}`;
+                        const entry = state.data[key];
+                        if (entry) return `<td data-key="${key}"><div class="entry"><strong>${escapeHtml(entry.subject)}</strong><small>${escapeHtml(entry.teacher)}</small><small>${escapeHtml(entry.note)}</small></div></td>`;
+                        return `<td data-key="${key}"><div class="cell"><div class="empty">+ Add</div></div></td>`;
+                    }).join('');
+                }
+
+                tbody.appendChild(tr);
+                t += duration;
+            });
+
+            // attach double-click listeners after grid is built
+            $$('#tbodyRows td').forEach(td => {
+                td.ondblclick = () => openEditor(td.dataset.key);
+            });
+        }
+
+        function openEditor(key) {
+            const modal = $('#modal');
+            const title = $('#modalTitle');
+            const subj = $('#subj');
+            const teacher = $('#teacher');
+            const note = $('#note');
+            const del = $('#deleteEntry');
+
+            const entry = state.data[key] || { subject: '', teacher: '', note: '' };
+            title.textContent = `Edit — ${key}`;
+            subj.value = entry.subject || '';
+            teacher.value = entry.teacher || '';
+            note.value = entry.note || '';
+            modal.classList.add('show');
+
+            const saveHandler = () => {
+                const s = subj.value.trim();
+                if (!s) delete state.data[key];
+                else state.data[key] = { subject: s, teacher: teacher.value.trim(), note: note.value.trim() };
+                saveState(); closeModal(); buildGrid();
+            }
+
+            const delHandler = () => { delete state.data[key]; saveState(); closeModal(); buildGrid(); }
+
+            $('#saveEntry').onclick = saveHandler;
+            del.onclick = delHandler;
+        }
+
+        function closeModal() { $('#modal').classList.remove('show'); }
+        $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+
+        function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+        // Controls
+        $('#startTime').addEventListener('change', e => { state.start = e.target.value; saveState(); buildGrid(); });
+        $('#endTime').addEventListener('change', e => { state.end = e.target.value; saveState(); buildGrid(); });
+        $('#weekStart').addEventListener('change', e => { state.week = e.target.value; saveState(); buildGrid(); });
+        $('#slotLen').addEventListener('change', e => { state.slot = e.target.value; saveState(); buildGrid(); });
+
+        $('#exportBtn').addEventListener('click', () => {
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'schedule.json'; a.click(); URL.revokeObjectURL(url);
+        });
+
+        $('#importBtn').addEventListener('click', () => { $('#fileIn').click(); });
+        $('#fileIn').addEventListener('change', (e) => {
+            const f = e.target.files[0]; if (!f) return;
+            const r = new FileReader();
+            r.onload = () => {
+                try {
+                    state = { ...state, ...JSON.parse(r.result) };
+                    saveState(); buildGrid();
+                    alert('Imported successfully!');
+                } catch (err) { alert('Invalid JSON file!') }
+            };
+            r.readAsText(f);
+            e.target.value = '';
+        });
+
+        $('#clearBtn').addEventListener('click', () => {
+            if (confirm('Clear all saved schedule?')) {
+                state.data = {}; saveState(); buildGrid();
+            }
+        });
+
+        // Theme toggle
+        $('#themeToggle').addEventListener('click', () => document.body.classList.toggle('light-mode'));
+
+        // Init
+        loadState();
+        $('#startTime').value = state.start;
+        $('#endTime').value = state.end;
+        $('#slotLen').value = state.slot;
+        $('#weekStart').value = state.week;
+        buildGrid();
+
+    </script>
+
+</body>
+
+</html>
